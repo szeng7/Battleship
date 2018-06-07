@@ -1,0 +1,288 @@
+        -:    0:Source:commands.c
+        -:    0:Graph:commands.gcno
+        -:    0:Data:-
+        -:    0:Runs:0
+        -:    0:Programs:0
+        -:    1:/*Simon Zeng szeng7@jhu.edu, Bryan Ki, nki1@jhu.edu */
+        -:    2:
+        -:    3:#include <stdio.h>
+        -:    4:#include <stdlib.h>
+        -:    5:#include <string.h>
+        -:    6:#include <stdbool.h>
+        -:    7:#include "commands.h"
+        -:    8:
+        -:    9:int cntr = 0; /* global so that it prints out concede instead of last sunk */
+        -:   10:
+        -:   11:enum result {
+        -:   12:	EMPTY = 0, SHIP, HIT, SUNK
+        -:   13:};
+        -:   14:
+        -:   15:/* This initializes our board manually to the formation we want (strategized
+        -:   16: * beforehand w/o the code before coding it
+        -:   17: */
+        -:   18:
+        -:   19:void init_board(int* board)
+        -:   20:{
+    #####:   21:	board[11] = board[21] = SHIP;
+    #####:   22:	board[7] = board[8] = board[9] = SHIP;
+    #####:   23:	board[3] = board[13] = board[23] = board[33] = SHIP;
+    #####:   24:	board[76] = board[77] = board[78] = board[79] = SHIP;
+    #####:   25:	board[29] = board[39] = board[49] = SHIP;
+    #####:   26:	board[25] = board[26] = SHIP;
+    #####:   27:	board[52] = board[62] = SHIP;
+    #####:   28:	board[50] = board[60] = board[70] = SHIP;
+    #####:   29:	board[99] = board[98] = SHIP;
+    #####:   30: 	board[91] = board[92] = board[93] = board[94] = board[95] = SHIP;
+    #####:   31:} 
+        -:   32:
+        -:   33:/* This is a helper function that increments the index by 11 (our diagonal
+        -:   34: * algorithm and then mods it by 100 and subtracts one from it if it is 
+        -:   35: * greater than 100. Returns incremented index.
+        -:   36: */
+        -:   37:
+        -:   38:int index_increment(int index)
+        -:   39:{
+    #####:   40:	index = index + 11;
+    #####:   41:	if (index > 99) {
+    #####:   42:		index = (index % 100) - 1;
+    #####:   43:	}
+    #####:   44:	return index;
+        -:   45:}
+        -:   46:
+        -:   47:/* Helper function to check if index is inbound (for when attacking blocks 
+        -:   48: * adjacent to corner or border blocks). Returns true if inbound, false if not
+        -:   49: */
+        -:   50:
+        -:   51:bool check_inbound(int index)
+        -:   52:{
+    #####:   53:	if ((index > 99) || (index < 0)) {
+    #####:   54:		return false;
+        -:   55:	}
+    #####:   56:	return true;
+    #####:   57:}
+        -:   58:
+        -:   59:/* Helper function to check if our ships were all sunk and concede needs to be
+        -:   60: * printed. Edits string given and returns number corresponding to certain 
+        -:   61: * errors and pathways in battle.c
+        -:   62: */
+        -:   63:
+        -:   64:int check_concede(int cntr, char* statement) 
+        -:   65:{
+    #####:   66:	if (cntr == 10) {
+    #####:   67:		strcpy(statement, "CONCEDE");
+    #####:   68:		return 3;
+        -:   69:	}
+    #####:   70:	return 2;
+    #####:   71:}
+        -:   72:
+        -:   73:
+        -:   74:/* Calculate what to say for next move and edits passed string
+        -:   75: */
+        -:   76:
+        -:   77:void calc_attack(char* attack)
+        -:   78:{
+    #####:   79:	strcpy(attack, "FIRE");
+    #####:   80:}
+        -:   81:
+        -:   82:/* Calculate index for next attack based on previous moves and current 
+        -:   83: * battleboard situation. Returns index of next block to attack.
+        -:   84: */
+        -:   85:
+        -:   86:int calc_index(int* opp_board, int index, char* rec_com)
+        -:   87:{
+    #####:   88:		if (rec_com[0] == 'S') {
+    #####:   89:			opp_board[index] = SHIP;
+        -:   90:			index = 10;
+    #####:   91:			while (opp_board[index] != EMPTY) {
+    #####:   92:				index = index_increment(index);
+        -:   93:			}
+    #####:   94:			if(check_inbound(index) == false) {
+    #####:   95:				return 10;
+        -:   96:			}
+    #####:   97:			return index;
+    #####:   98:		} else if (rec_com[0] == 'H') {
+    #####:   99:			opp_board[index] = SHIP;
+    #####:  100:			index = ship_hit(opp_board, index);
+    #####:  101:			if(check_inbound(index) == false) {
+    #####:  102:				return 10;
+        -:  103:			}
+    #####:  104:			return index;			
+    #####:  105:		} else if (rec_com[0] == 'M') {
+    #####:  106:			opp_board[index] = HIT;
+        -:  107:			index = 10;
+    #####:  108:			while (opp_board[index] == HIT) {
+    #####:  109:				index = index_increment(index);
+        -:  110:			}
+    #####:  111:			if (opp_board[index] == SHIP) {
+    #####:  112:				index = ship_hit(opp_board, index);
+    #####:  113:			}
+    #####:  114:			if(check_inbound(index) == false) {
+    #####:  115:				return 10;
+        -:  116:			}	
+    #####:  117:			return index;
+        -:  118:		} else { //concede
+    #####:  119:			return -1;
+        -:  120:		}
+    #####:  121:}
+        -:  122:	
+        -:  123:/* After reading FIRE command, see if opponent hit/miss/sunk/concede. Edits
+        -:  124: * string that will then be printed in the main function and returns an int
+        -:  125: * that corresponds to certain error messages and pathways in battle.c
+        -:  126: */
+        -:  127:
+        -:  128:int decide_result(char* command, char col, int row, int* board, char* statement)
+        -:  129:{
+    #####:  130:	if (strcmp(command, "CHEAT") == 0) {
+    #####:  131:		fprintf(stderr, "error: cheating detected\n");
+    #####:  132:		return 0;
+        -:  133:	}
+    #####:  134:	if (strcmp(command, "FIRE") != 0) { 
+    #####:  135:		fprintf(stderr, "error: command given is not correct\n");
+    #####:  136:		return 0;
+        -:  137:	}	
+        -:  138:	
+    #####:  139:	int colNum = col - 65;
+        -:  140:	
+    #####:  141:	if (row > 10) {
+    #####:  142:		fprintf(stderr, "error: row number chosen is out of bounds\n");
+    #####:  143:		return 0;
+        -:  144:	}
+        -:  145:
+    #####:  146:	if ((colNum < 0) || (colNum > 9)) {
+    #####:  147:		fprintf(stderr, "error: column chosen is out of bounds\n");
+    #####:  148:		return 0;
+        -:  149:	}
+        -:  150:
+    #####:  151:	int idx = (10 * (row - 1)) + colNum;
+        -:  152:	
+    #####:  153:	if (board[idx] == HIT) {
+    #####:  154:		fprintf(stderr, "error: block was already hit\n");
+    #####:  155:	} else if (board[idx] == SUNK) {
+    #####:  156:		fprintf(stderr, "error: ship was already sunk\n");
+    #####:  157:	} else if (board[idx] == EMPTY) {
+    #####:  158:		board[idx] = HIT;
+    #####:  159:		strcpy(statement, "MISS");
+    #####:  160:		return 1;
+    #####:  161:	} else if (board[idx] == SHIP) {
+    #####:  162:		board[idx] = HIT;
+    #####:  163:		if ((board[11] == HIT) && (board[21] == HIT)) {
+    #####:  164:			strcpy(statement, "SUNK 2");
+    #####:  165:			board[11] = board[21] = SUNK;
+    #####:  166:			cntr++;
+    #####:  167:			return check_concede(cntr, statement);
+        -:  168:		}
+    #####:  169:		if ((board[52] == HIT) && (board[62] == HIT)) {
+    #####:  170:			strcpy(statement, "SUNK 2");
+    #####:  171:			board[52] = board[62] = SUNK;
+    #####:  172:			cntr++;
+    #####:  173:			return check_concede(cntr, statement);
+        -:  174:		}
+    #####:  175:		if ((board[25] == HIT) && (board[26] == HIT)) {
+    #####:  176:			strcpy(statement, "SUNK 2");
+    #####:  177:			board[25] = board[26] = SUNK;
+    #####:  178:			cntr++;
+    #####:  179:			return check_concede(cntr, statement);
+        -:  180:		}
+    #####:  181:		if ((board[98] == HIT) && (board[99] == HIT)) {
+    #####:  182:			strcpy(statement, "SUNK 2");
+    #####:  183:			board[98] = board[99] = SUNK;
+    #####:  184:			cntr++;
+    #####:  185:			return check_concede(cntr, statement);
+        -:  186:		}
+    #####:  187:		if ((board[7] == HIT) && (board[8] == HIT) && (board[9] == HIT)) {
+    #####:  188:			strcpy(statement, "SUNK 3");
+    #####:  189:			board[7] = board[8] = board[9] = SUNK;
+    #####:  190:			cntr++;
+    #####:  191:			return check_concede(cntr, statement);
+        -:  192:		}
+    #####:  193:		if ((board[29] == HIT) && (board[39] == HIT) && (board[49] == HIT)) {
+    #####:  194:			strcpy(statement, "SUNK 3");
+    #####:  195:			board[29] = board[39] = board[49] = SUNK;
+    #####:  196:			cntr++;
+    #####:  197:			return check_concede(cntr, statement);
+        -:  198:		}
+    #####:  199:		if ((board[50] == HIT) && (board[60] == HIT) && (board[70] == HIT)) {
+    #####:  200:			strcpy(statement, "SUNK 3");
+    #####:  201:			board[50] = board[60] = board[70] = SUNK;
+    #####:  202:			cntr++;
+    #####:  203:			return check_concede(cntr, statement);
+        -:  204:		}
+    #####:  205:		if ((board[76] == HIT) && (board[77] == HIT) && (board[78] == HIT) 
+    #####:  206:				&& (board[79] == HIT)) {
+    #####:  207:			strcpy(statement, "SUNK 4");
+    #####:  208:			board[76] = board[77] = board[78] = board[79] = SUNK;
+    #####:  209:			cntr++;
+    #####:  210:			return check_concede(cntr, statement);
+        -:  211:		}
+    #####:  212:		if ((board[3] == HIT) && (board[13] == HIT) && (board[23] == HIT)
+    #####:  213:				 && (board[33] == HIT)) {
+    #####:  214:			strcpy(statement, "SUNK 4");
+    #####:  215:			board[3] = board[13] = board[23] = board[33] = SUNK;
+    #####:  216:			cntr++;
+    #####:  217:			return check_concede(cntr, statement);
+        -:  218:		}
+    #####:  219:		if ((board[91] == HIT) && (board[92] == HIT) && (board[93] == HIT)
+    #####:  220:				 && (board[94] == HIT) && (board[95] == HIT)) {
+    #####:  221:			strcpy(statement, "SUNK 5");
+    #####:  222:			board[91] = board[92] = board[93] = board[94] = board[95] = SUNK;
+    #####:  223:			cntr++;
+    #####:  224:			return check_concede(cntr, statement);
+        -:  225:		}
+    #####:  226:			strcpy(statement, "HIT");
+    #####:  227:			return 1;
+        -:  228:	}
+    #####:  229:	strcpy(statement, "MISS");
+    #####:  230:	return 1;
+    #####:  231:}
+        -:  232:
+        -:  233:/* Calculates what to do when a block chosen was a ship (so basically, it 
+        -:  234: * goes around and hits all the blocks adjacent in a clockwise direction 
+        -:  235: * starting with the one to its right). Returns index of next block to attack.
+        -:  236: */
+        -:  237:
+        -:  238:int ship_hit(int* opp_board, int index) {
+    #####:  239:	index = index + 1;
+    #####:  240:		if (check_inbound(index) == false) {
+        -:  241:			index = index - 1;
+    #####:  242:		} else {
+    #####:  243:			if (opp_board[index] == EMPTY) {
+    #####:  244:				return index;
+        -:  245:			}
+        -:  246:			index = index - 1;
+        -:  247:		}
+    #####:  248:	index = index + 10;
+    #####:  249:		if (check_inbound(index) == false) {	
+        -:  250:			index = index - 10;
+    #####:  251:		} else {
+    #####:  252:			if (opp_board[index] == EMPTY) {
+    #####:  253:				return index;
+        -:  254:			}
+        -:  255:			index = index - 10;
+        -:  256:		}
+    #####:  257:	index = index - 1;
+    #####:  258:		if (check_inbound(index) == false) {
+        -:  259:			index = index + 1;
+    #####:  260:		} else {
+    #####:  261:			if (opp_board[index] == EMPTY) {
+    #####:  262:				return index;
+        -:  263:			}		
+        -:  264:			index = index + 1;
+        -:  265:		}
+    #####:  266:	index = index - 10;
+    #####:  267:		if (check_inbound(index) == false) {
+        -:  268:			index = index + 10;
+    #####:  269:		} else {
+    #####:  270:			if (opp_board[index] == EMPTY) {
+    #####:  271:				return index;
+        -:  272:			}
+        -:  273:			index = index + 10;
+        -:  274:		}
+    #####:  275:	while (opp_board[index] != EMPTY) {
+    #####:  276:		index = index_increment(index);
+    #####:  277:		if (opp_board[index] == SHIP) {
+    #####:  278:			index = ship_hit(opp_board, index);
+    #####:  279:		}
+        -:  280:	} 
+    #####:  281:	return index;
+        -:  282:
+    #####:  283:}

@@ -1,0 +1,44 @@
+This is an updated version of the battleship program written for a class (revisited it after the class was finished to polish it up).
+
+	-The program actually contains structs that are 2D "boards" rather than just a 1D array unraveled out
+	-The attack algorithm has two modes:
+		Scatter: This is where the algorithm puts a probabilistic value on every block on the board (based on how many ships left can be in that spot). 
+		Target: This is where there has been a hit by the Scatter mode and the program starts to attack the blocks around that previously hit spot (first hits the spot more likely, so if there the block to the left is known to be a ship as well, then it'll attack the block to the right)
+
+TEST CASES:
+
+.in and .out files correspond to running ./battle
+.fin and .fout files correspond to running ./battle -f (player 1) 
+
+all the stderr's from this testing were redirected to errors.c to avoid cluttering up the terminal (we already know that the messages match up from coverage analysis)
+	
+1. concede.in/.fin - tests that the program reads CONCEDE and exits
+accordingly
+
+2. immediateconcede.in/.fin - tests that the program can read CONCEDE immediately at the beginning and exit right away
+
+3. end.in/.fin - tests that the program will halt when the input is not properly formatted (only contains EOF)
+
+4. hit.in/.fin - tests that the program will respond with HIT when a ship is hit
+
+5. hit_twice.in/.fin - tests that the program will first display HIT and then MISSwhen a spot is hit twice
+
+6. miss.in/.fin - tests that the program responds with MISS when a spot is empty
+
+7. sunk.in/.fin - tests that the program responds with SUNK when a ship is sunk
+
+8. surrender.in/.out - tests that the program surrenders when all of its ships are hit
+
+9. col.in/.out - tests that the program stops when the col is out of bounds
+
+10. row.in/.out - tests that the program stops when the row is out of bounds
+ 
+11. typo.in/.out - tests that the program stops when the command is misspelled
+
+12. surround.in/.out - tests that the program attacks around a block (target mode)
+
+13. surroundpref.in/.out - tests that the program first attacks one direction in target mode
+
+14. modeswitch.in/.out - tests that the program comes out of target mode when a ship is sunk
+
+

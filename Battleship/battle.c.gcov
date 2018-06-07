@@ -1,0 +1,147 @@
+        -:    0:Source:battle.c
+        -:    0:Graph:battle.gcno
+        -:    0:Data:-
+        -:    0:Runs:0
+        -:    0:Programs:0
+        -:    1:/* Simon Zeng szeng7@jhu.edu, Bryan Ki nki1@jhu.edu */
+        -:    2:/* Main program to run (that uses the commands) */
+        -:    3:#include <stdio.h>
+        -:    4:#include <stdlib.h>
+        -:    5:#include <string.h>
+        -:    6:#include "commands.h"
+        -:    7:
+        -:    8:int main(int argc, char *argv[]) 
+        -:    9:{
+    #####:   10:	int our_board[100] = {0};
+    #####:   11:	int opp_board[100] = {0};
+    #####:   12:	int row, f, g, atk_colNum, atk_row, sunk_spot;
+    #####:   13:	char col, atk_col;
+    #####:   14:	char command[5];
+    #####:   15:	char statement[10] = {'\0'};	
+    #####:   16:	char attack[10] = {'\0'};	
+        -:   17:	int index = 10;
+        -:   18:	
+    #####:   19:	init_board(our_board);
+        -:   20:	
+    #####:   21:	if (argc > 1) { /* attacking first/player1 */
+        -:   22:		
+    #####:   23:		printf("FIRE A 2\n"); /* block we always want to start with */
+    #####:   24:		fflush( stdout );	
+    #####:   25:		while ((f = scanf("%s", attack)) == 1) {	
+    #####:   26:			if (strcmp(attack, "SUNK") == 0) {
+    #####:   27:				if (scanf("%d\n%s %c %d", 
+    #####:   28:					&sunk_spot, command, &col, &row) != 4) {
+    #####:   29:					fprintf(stderr, "error: scanf failed\n");
+    #####:   30:					return EXIT_FAILURE;
+        -:   31:				}
+    #####:   32:			} else if (strcmp(attack, "CONCEDE") == 0) {
+    #####:   33:				return EXIT_SUCCESS;
+        -:   34:			} else {
+    #####:   35:				if (scanf("%s %c %d", command, &col, &row) != 3) {
+    #####:   36:					fprintf(stderr, "error: scanf failed\n");
+    #####:   37:					return EXIT_FAILURE;
+        -:   38:				}
+        -:   39:			}
+        -:   40:		
+        -:   41:			if (command == NULL) {
+        -:   42:				return EXIT_FAILURE;
+        -:   43:			}
+    #####:   44:			if ((g = decide_result(command, col, row, 
+    #####:   45:						our_board, statement)) == 1) {
+    #####:   46:				printf("%s\n", statement);
+    #####:   47:				memset(statement, '\0', strlen(statement));
+    #####:   48:			} else if (g == 2) {
+    #####:   49:				printf("%s\n", statement);
+    #####:   50:				memset(statement, '\0', strlen(statement));
+    #####:   51:			} else if (g == 3) {
+    #####:   52:				printf("%s\n", statement);
+    #####:   53:				return EXIT_FAILURE;
+        -:   54:			} else { //if g = 0
+    #####:   55:				return EXIT_FAILURE;
+        -:   56:			}
+    #####:   57:			index = calc_index(opp_board, index, attack);
+    #####:   58:			if (index < 0) {
+    #####:   59:				return EXIT_SUCCESS;
+        -:   60:			}
+        -:   61:
+    #####:   62:			atk_colNum = index % 10;
+    #####:   63:			atk_row = ((index - atk_colNum) / 10) + 1;
+    #####:   64:			atk_col = 'A' + atk_colNum;
+    #####:   65:			calc_attack(attack);
+    #####:   66:			printf("%s %c %d\n", attack, atk_col, atk_row);
+    #####:   67:			fflush (stdout );
+        -:   68:		}	
+        -:   69:	} else { /* receiving first/player 2, without -f flag */
+    #####:   70:		if (scanf("%s %c %d", command, &col, &row) != 3) {
+    #####:   71:			fprintf(stderr, "error: scanf failed\n");
+    #####:   72:			return EXIT_FAILURE;
+        -:   73:		}
+        -:   74:
+        -:   75:		if (command == NULL) {
+        -:   76:			return EXIT_FAILURE;
+        -:   77:		}
+    #####:   78:		if ((g = decide_result(command, col, row, 
+    #####:   79:					our_board, statement)) == 1) {
+    #####:   80:			printf("%s\n", statement);
+    #####:   81:			memset(statement, '\0', strlen(statement));
+    #####:   82:		}
+        -:   83:		
+    #####:   84:		printf("FIRE A 2\n"); 
+    #####:   85:		fflush ( stdout );
+        -:   86:
+    #####:   87:		while ((f = scanf("%s", attack)) == 1) {	
+    #####:   88:			if (strcmp(attack, "SUNK") == 0) {
+    #####:   89:				if (scanf("%d\n%s %c %d", &sunk_spot, 
+    #####:   90:						command, &col, &row) != 4) {
+    #####:   91:					fprintf(stderr, "error: scanf failed\n");
+    #####:   92:					return EXIT_FAILURE;
+        -:   93:				}
+    #####:   94:			} else if (strcmp(attack, "CONCEDE") == 0) {
+    #####:   95:				return EXIT_SUCCESS;
+        -:   96:			} else {
+    #####:   97:				if (scanf("%s %c %d", command, &col, &row) != 3) {
+    #####:   98:					fprintf(stderr, "error: scanf failed\n");
+    #####:   99:					return EXIT_FAILURE;
+        -:  100:				}
+        -:  101:			}
+        -:  102:		
+        -:  103:			if (command == NULL) {
+        -:  104:				return EXIT_FAILURE;
+        -:  105:			}
+    #####:  106:			if ((g = decide_result(command, col, row, 
+    #####:  107:						our_board, statement)) == 1) {
+    #####:  108:				printf("%s\n", statement);
+    #####:  109:				memset(statement, '\0', strlen(statement));
+    #####:  110:			} else if (g == 2) {
+    #####:  111:				printf("%s\n", statement);
+    #####:  112:				memset(statement, '\0', strlen(statement));
+    #####:  113:			} else if (g == 3) {
+    #####:  114:				printf("%s\n", statement);
+    #####:  115:				return EXIT_FAILURE;
+        -:  116:			}else { //if g = 0
+    #####:  117:				return EXIT_FAILURE;
+        -:  118:			}	
+        -:  119:
+    #####:  120:			index = calc_index(opp_board, index, attack);
+        -:  121:		
+    #####:  122:			if (index < 0) {
+        -:  123:				/* opponent conceded */
+    #####:  124:				return EXIT_SUCCESS;
+        -:  125:			}
+        -:  126:
+    #####:  127:			atk_colNum = index % 10;
+    #####:  128:			atk_row = ((index - atk_colNum) / 10) + 1;
+    #####:  129:			atk_col = 'A' + atk_colNum;
+    #####:  130:			calc_attack(attack);
+    #####:  131:			printf("%s %c %d\n", attack, atk_col, atk_row);
+    #####:  132:			fflush (stdout );
+        -:  133:		}		
+        -:  134:	}
+    #####:  135:	if (f != 3) {
+    #####:  136:		fprintf(stderr, "error: input is of wrong format\n");
+    #####:  137:		return EXIT_FAILURE;
+        -:  138:	}
+        -:  139:	
+        -:  140:	argv++; /* just to bypass compiler warning */
+    #####:  141:	return EXIT_SUCCESS;
+    #####:  142:} 

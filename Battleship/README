@@ -1,0 +1,68 @@
+/* Bryan Ki nki1@jhu.edu, Simon Zeng szeng7@jhu.edu */
+
+No cheating or cheat detection used
+
+The attack algorithm used starts at A 2 (index 10) and then goes diagonally down
+to the right (so index + 11) until it hits something. When the index becomes larger
+than 99 (so two cases, one (index > 100): we take the mod 100 (remainder when
+divide by 100) and then subtract one from it to get to the very top of the column
+where it ended before continuing the diagonal path, two: (index = 100): the program
+ends: all available shots have been made and thus, the opponents must have cheated).
+
+When the algorithm hits something, then it immediately goes back to the same spot
+and start attacking clockwise around it (starting with directly right of it). If it 
+hits something else again, it starts going clockwise around that until we get a sunk, 
+at which the program will resume along its diagonal path.
+
+Extra complexity was put into the attack algorithm to rewind over some previous
+hits (and sinks) in the case of ships being bundled together (so basically, we
+didn't want the attack algorithm to just move on after recognizing just one sink
+because there might be more ships around there right next to each other). 
+
+
+
+COVERAGE ANALYSIS:
+
+100% coverage for battle.c and commands.c using the test cases and test driver
+(test_driver.c)
+
+TEST CASES:
+
+We ran piper against our own program to hit all possible commands in the game, 
+such as hit, sink, miss, etc. The output of the piper program is stored in output.c.
+
+All stderr's from our shell script testing were redirected to errors.c and test_driver to errors2.c.
+(this was to avoid cluttering up the terminal because we already know the 
+error messages match up with the errors while doing coverage analysis)
+
+.in and .out files correspond to running ./battle
+.fin and .fout files correspond to running ./battle -f
+
+1. concede.in/.fin - tests to confirm that our program reads in CONCEDE and exits
+ the program without crashing.
+
+2. end.in/fin - tests to confirm that the program will error if the input is not
+ properly formatted (only contains EOF)
+
+3. hit.in/fin - tests to confirmt that when a ship is hit, it responds with HIT.
+
+4. hit_twice.in/fin - tests to confirm that the program erros when a location is
+hit twice
+
+5. kill.in/fin - hardcoded input to destroy all the ships, makes sure that the 
+program concedes when all ships are destroyed
+
+6. latesunk - get scanf to fail in the while loop (as player 2) while the first
+word read was sunk
+
+7. miss.in/fin - makes sure that the program responds with MISS when it does not
+ hit a ship.
+
+8. scan.in/fin - ensures that error is printed when input is not given correctly
+
+9. sunk.in/fin - ensures that when all the coordinates of a ship is hit, the 
+program returns SUNK
+
+10. sunktwice.in - ensures that that when a ship is attempted to be sunk twice,
+it goes along a different path (instead of where you try to try to hit a random
+block twice) (for full coverage)
